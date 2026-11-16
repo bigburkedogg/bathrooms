@@ -1,0 +1,322 @@
+{
+ "schema": 1,
+ "id": "back-bath",
+ "name": "Back Bathroom",
+ "subtitle": "master bath",
+ "property": "Flagstaff house",
+ "order": 1,
+ "as_of": "2026-11-16",
+ "summary": "Gut remodel around a new walk-in shower: drain set in the slab, new toilet flange, open exterior wall closed with block, ceiling register moved.",
+ "ceiling_in": 96,
+ "ceiling_conf": "documented",
+ "start_heading": "E",
+ "walls": [
+  {
+   "id": "A",
+   "length_in": 72,
+   "conf": "estimated"
+  },
+  {
+   "id": "B",
+   "length_in": 96,
+   "conf": "estimated"
+  },
+  {
+   "id": "C",
+   "length_in": 72,
+   "conf": "estimated"
+  },
+  {
+   "id": "D",
+   "length_in": 96,
+   "conf": "estimated"
+  }
+ ],
+ "objects": [
+  {
+   "id": "shower",
+   "type": "shower",
+   "label": "Walk-in shower",
+   "wall": "A",
+   "x_in": 0,
+   "w_in": 72,
+   "depth_in": 36,
+   "conf": "estimated",
+   "walls_material": "calcare-linen",
+   "tile_to_in": 96,
+   "floor_material": "closer-pebble",
+   "entry": {
+    "type": "panel",
+    "panel_w_in": 34,
+    "side": "end"
+   },
+   "drain": {
+    "type": "round",
+    "u_in": 36,
+    "v_in": 20
+   },
+   "curb": {
+    "h_in": 4,
+    "w_in": 5,
+    "material": "calcare-linen"
+   }
+  },
+  {
+   "id": "valve",
+   "type": "valve",
+   "wall": "B",
+   "x_in": 14.5,
+   "w_in": 7,
+   "y_in": 44,
+   "h_in": 7,
+   "conf": "assumed"
+  },
+  {
+   "id": "head",
+   "type": "showerhead",
+   "wall": "B",
+   "x_in": 15.5,
+   "w_in": 5,
+   "y_in": 80,
+   "h_in": 5,
+   "conf": "assumed"
+  },
+  {
+   "id": "toilet",
+   "type": "toilet",
+   "wall": "B",
+   "x_in": 74.5,
+   "w_in": 20,
+   "depth_in": 28,
+   "h_in": 30,
+   "conf": "estimated"
+  },
+  {
+   "id": "light",
+   "type": "light",
+   "label": "Vanity light",
+   "wall": "B",
+   "x_in": 43,
+   "w_in": 18,
+   "y_in": 80,
+   "h_in": 6,
+   "conf": "estimated",
+   "with": "vanity"
+  },
+  {
+   "id": "door",
+   "type": "door",
+   "wall": "C",
+   "x_in": 42,
+   "w_in": 30,
+   "h_in": 80,
+   "hinge": "right",
+   "conf": "estimated"
+  },
+  {
+   "id": "vanity",
+   "type": "vanity",
+   "wall": "B",
+   "x_in": 41,
+   "w_in": 30,
+   "conf": "estimated",
+   "depth_in": 21,
+   "h_in": 34
+  }
+ ],
+ "floor": {
+  "material": "closer-pebble"
+ },
+ "paint": {
+  "material": "natural-cream",
+  "coats": 2,
+  "ceiling": true
+ },
+ "materials": {
+  "natural-cream": {
+   "kind": "paint",
+   "name": "Natural Cream",
+   "product": "Behr Dynasty Matte on walls, Behr Premium Plus Ceiling Flat on ceilings",
+   "color": "#ECE5D4",
+   "coverage_sqft_per_gal": 350,
+   "where": "Walls and ceiling (whole-house color)",
+   "status": "House standard"
+  },
+  "calcare-linen": {
+   "kind": "tile",
+   "name": "Calcare Linen Deco Matte 24 × 48",
+   "maker": "The Tile Shop",
+   "sku": "684690",
+   "tile_w_in": 24,
+   "tile_h_in": 48,
+   "orientation": "vertical",
+   "pattern": "stack",
+   "grout_in": 0.125,
+   "grout_color": "#CBC3B4",
+   "look": "photo",
+   "face_img": "textures/calcare-linen.jpg",
+   "face_img_in": 12,
+   "bump_img": "textures/calcare-linen-bump.jpg",
+   "color": "#C9C0B0",
+   "finish": "matte",
+   "unit": "piece",
+   "unit_sqft": 7.8115,
+   "price_per_sqft": 8.99,
+   "waste_pct": 15,
+   "photo": "photos/back-bath-tile-calcare-pebble.jpg",
+   "where": "Shower walls",
+   "status": "On the Tile Shop selection sheet",
+   "selection": {
+    "date": "2026-11-07",
+    "qty": 2,
+    "coverage_sqft": 15.623,
+    "price": 140.49,
+    "doc": "Tile Shop selection sheet"
+   }
+  },
+  "closer-pebble": {
+   "kind": "tile",
+   "name": "Closer Pebble Matte Mosaic",
+   "maker": "The Tile Shop",
+   "sku": "685156",
+   "format": "mesh-mounted mosaic sheet",
+   "look": "sheet",
+   "sheet_img": "textures/closer-pebble.jpg",
+   "sheet_w_in": 12,
+   "sheet_h_in": 12,
+   "bump_img": "textures/closer-pebble-bump.jpg",
+   "color": "#B5AEA2",
+   "grout_color": "#E8E4DB",
+   "finish": "matte",
+   "unit": "sheet",
+   "unit_sqft": 0.98933,
+   "price_per_sqft": 36.23,
+   "waste_pct": 10,
+   "photo": "photos/back-bath-tile-closeup.jpg",
+   "where": "Floor and shower floor",
+   "status": "On the Tile Shop selection sheet",
+   "selection": {
+    "date": "2026-11-07",
+    "qty": 6,
+    "coverage_sqft": 5.936,
+    "price": 215.05,
+    "doc": "Tile Shop selection sheet"
+   }
+  }
+ },
+ "fixtures": [
+  {
+   "item": "Toilet",
+   "choice": "Kohler Highline Arc 1.28 GPF elongated chair-height, soft-close seat (K-78279-0)",
+   "price": 199
+  },
+  {
+   "item": "Vanity",
+   "choice": "Timeless Home 40″ single vanity, walnut, ivory engineered-stone top",
+   "price": 855
+  },
+  {
+   "item": "Vanity",
+   "choice": "Concrete integral sink on a cabinet base you build (sage or terracotta)",
+   "photos": [
+    "photos/back-bath-sink-sage.jpg",
+    "photos/back-bath-sink-terracotta.jpg"
+   ]
+  },
+  {
+   "item": "Shower valve + head",
+   "choice": "The shower system a friend gave you"
+  },
+  {
+   "item": "Vanity light",
+   "choice": "Over-vanity fixture",
+   "price": 150
+  }
+ ],
+ "scope": [
+  {
+   "text": "Excavate the floor and set the new shower drain in the slab",
+   "status": "done",
+   "date": "2026-10-12"
+  },
+  {
+   "text": "Close the open exterior wall with block"
+  },
+  {
+   "text": "Drywall",
+   "status": "done",
+   "date": "2026-11-02"
+  },
+  {
+   "text": "Move the ceiling register a few feet"
+  },
+  {
+   "text": "Tile the shower walls, shower floor and floor"
+  },
+  {
+   "text": "Set the vanity, toilet, mirror and light"
+  }
+ ],
+ "open_items": [
+  {
+   "id": "pebble-extent",
+   "severity": "medium",
+   "text": "Closer Pebble on the whole floor, or only the shower floor? The selection sheet covers 5.9 sq ft.",
+   "blocks": [
+    "floor tile quantity",
+    "cost"
+   ]
+  },
+  {
+   "id": "calcare-layout",
+   "severity": "low",
+   "text": "Calcare: stacked or offset (laid vertical)",
+   "blocks": [
+    "cut plan"
+   ]
+  },
+  {
+   "id": "shower-height",
+   "severity": "low",
+   "text": "Shower wall tile height (to the ceiling assumed)",
+   "blocks": [
+    "wall tile quantity"
+   ]
+  },
+  {
+   "id": "vanity",
+   "severity": "medium",
+   "text": "Vanity: which unit (30″ on the plan; the budget lists a 40″ walnut; the concrete sink is the other idea)",
+   "blocks": [
+    "plumbing heights",
+    "mirror and light placement"
+   ]
+  },
+  {
+   "id": "curb-size",
+   "severity": "low",
+   "text": "Curb size (4″ tall × 5″ wide assumed)",
+   "blocks": [
+    "curb tile",
+    "glass height"
+   ]
+  }
+ ],
+ "photos": [
+  {
+   "role": "goal",
+   "src": "photos/back-bath-tile-calcare-pebble.jpg",
+   "caption": "Calcare Linen 24×48 over Closer Pebble — Tile Shop, Nov 7"
+  },
+  {
+   "role": "goal",
+   "src": "photos/back-bath-sink-sage.jpg",
+   "caption": "Concrete sink, sage — vanity idea, Nov 7"
+  },
+  {
+   "role": "goal",
+   "src": "photos/back-bath-sink-terracotta.jpg",
+   "caption": "Same sink in terracotta"
+  }
+ ]
+}

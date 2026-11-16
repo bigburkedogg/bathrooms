@@ -1,0 +1,255 @@
+{
+ "schema": 1,
+ "id": "hall-bath",
+ "name": "Hall Bathroom",
+ "subtitle": "middle bath",
+ "property": "Flagstaff house",
+ "order": 2,
+ "as_of": "2026-11-15",
+ "summary": "New finishes around the existing tub: demo, tile the surround and floor, refinish the tub, new valve, toilet, vanity and fan. Electrical is done and the plumbing doesn't move.",
+ "ceiling_in": 96,
+ "ceiling_conf": "documented",
+ "start_heading": "E",
+ "walls": [
+  {
+   "id": "A",
+   "length_in": 60,
+   "conf": "assumed"
+  },
+  {
+   "id": "B",
+   "length_in": 96,
+   "conf": "assumed"
+  },
+  {
+   "id": "C",
+   "length_in": 60,
+   "conf": "assumed"
+  },
+  {
+   "id": "D",
+   "length_in": 96,
+   "conf": "assumed"
+  }
+ ],
+ "objects": [
+  {
+   "id": "tub",
+   "type": "tub",
+   "label": "Tub (existing)",
+   "wall": "A",
+   "x_in": 0,
+   "w_in": 60,
+   "depth_in": 30,
+   "h_in": 15,
+   "conf": "assumed",
+   "existing": true,
+   "surround": {
+    "material": "hall-surround",
+    "to_in": 96
+   }
+  },
+  {
+   "id": "valve",
+   "type": "valve",
+   "label": "Tub/shower valve",
+   "wall": "D",
+   "x_in": 77.5,
+   "w_in": 7,
+   "y_in": 30,
+   "h_in": 7,
+   "conf": "assumed"
+  },
+  {
+   "id": "spout",
+   "type": "spout",
+   "wall": "D",
+   "x_in": 79.5,
+   "w_in": 3,
+   "y_in": 20,
+   "h_in": 3,
+   "conf": "assumed"
+  },
+  {
+   "id": "head",
+   "type": "showerhead",
+   "wall": "D",
+   "x_in": 78.5,
+   "w_in": 5,
+   "y_in": 78,
+   "h_in": 5,
+   "conf": "assumed"
+  },
+  {
+   "id": "toilet",
+   "type": "toilet",
+   "wall": "B",
+   "x_in": 37,
+   "w_in": 20,
+   "depth_in": 28,
+   "h_in": 30,
+   "conf": "assumed"
+  },
+  {
+   "id": "vanity",
+   "type": "vanity",
+   "label": "Vanity (30″)",
+   "wall": "B",
+   "x_in": 62,
+   "w_in": 30,
+   "depth_in": 21,
+   "h_in": 34,
+   "conf": "assumed",
+   "style": "walnut"
+  },
+  {
+   "id": "mirror",
+   "type": "mirror",
+   "wall": "B",
+   "x_in": 65,
+   "w_in": 24,
+   "y_in": 42,
+   "h_in": 30,
+   "conf": "assumed",
+   "with": "vanity"
+  },
+  {
+   "id": "light",
+   "type": "light",
+   "label": "Vanity light",
+   "wall": "B",
+   "x_in": 68,
+   "w_in": 18,
+   "y_in": 80,
+   "h_in": 6,
+   "conf": "assumed",
+   "with": "vanity"
+  },
+  {
+   "id": "door",
+   "type": "door",
+   "wall": "C",
+   "x_in": 15,
+   "w_in": 30,
+   "h_in": 80,
+   "hinge": "left",
+   "conf": "assumed"
+  }
+ ],
+ "floor": {
+  "material": "hall-floor"
+ },
+ "paint": {
+  "material": "natural-cream",
+  "coats": 2,
+  "ceiling": true
+ },
+ "materials": {
+  "hall-surround": {
+   "kind": "tile",
+   "name": "Tub surround tile",
+   "look": "plain",
+   "color": "#E8E6E0",
+   "waste_pct": 10,
+   "where": "Tub surround, three walls",
+   "status": "Not chosen",
+   "allowance": {
+    "amount": 1000
+   }
+  },
+  "hall-floor": {
+   "kind": "tile",
+   "name": "Floor tile",
+   "look": "plain",
+   "color": "#D8D4CB",
+   "waste_pct": 10,
+   "where": "Floor",
+   "status": "Not chosen",
+   "allowance": {
+    "amount": 1000
+   }
+  },
+  "natural-cream": {
+   "kind": "paint",
+   "name": "Natural Cream",
+   "product": "Behr Dynasty Matte on walls, Behr Premium Plus Ceiling Flat on ceilings",
+   "color": "#ECE5D4",
+   "coverage_sqft_per_gal": 350,
+   "where": "Walls and ceiling (whole-house color)",
+   "status": "House standard"
+  }
+ },
+ "fixtures": [
+  {
+   "item": "Tub",
+   "choice": "Existing tub stays in place — refinish",
+   "price": 500
+  },
+  {
+   "item": "Tub/shower valve + trim",
+   "choice": "Delta Modern Cylindrical trim (T14459-BL-PP) + MultiChoice rough valve (R10000-UNBX), matte black",
+   "price": 191
+  },
+  {
+   "item": "Toilet",
+   "choice": "Kohler Highline Arc 1.28 GPF elongated chair-height, soft-close seat (K-78279-0)",
+   "price": 199
+  },
+  {
+   "item": "Vanity",
+   "choice": "Home Decorators Doveton 30″, dark walnut, white engineered-marble top",
+   "price": 459
+  },
+  {
+   "item": "Fan",
+   "choice": "New exhaust fan"
+  },
+  {
+   "item": "Vanity light",
+   "choice": "Over-vanity fixture",
+   "price": 150
+  }
+ ],
+ "scope": [
+  {
+   "text": "Close the bathroom wall (drywall hung)",
+   "status": "done",
+   "date": "2026-08-17"
+  },
+  {
+   "text": "Electrical",
+   "status": "done"
+  },
+  {
+   "text": "Demo, then tile the tub surround and floor"
+  },
+  {
+   "text": "Refinish the tub (stays in place)"
+  },
+  {
+   "text": "New tub/shower valve and trim, matte black"
+  },
+  {
+   "text": "New toilet, vanity, fan and vanity light"
+  }
+ ],
+ "open_items": [
+  {
+   "id": "vanity-width",
+   "severity": "medium",
+   "text": "The budget line is a 32″ vanity, but both walnut options found are 30″ — confirm the wall and plumbing take a 30″",
+   "blocks": [
+    "vanity order"
+   ]
+  },
+  {
+   "id": "surround-height",
+   "severity": "low",
+   "text": "Surround tile height (to the ceiling assumed)",
+   "blocks": [
+    "surround tile quantity"
+   ]
+  }
+ ],
+ "photos": []
+}

@@ -1,0 +1,18 @@
+[
+ {
+  "id": "back-bath",
+  "name": "Back Bathroom",
+  "subtitle": "master bath",
+  "property": "Flagstaff house",
+  "order": 1,
+  "as_of": "2026-11-16"
+ },
+ {
+  "id": "hall-bath",
+  "name": "Hall Bathroom",
+  "subtitle": "middle bath",
+  "property": "Flagstaff house",
+  "order": 2,
+  "as_of": "2026-11-15"
+ }
+]
