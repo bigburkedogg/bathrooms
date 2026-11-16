@@ -117,6 +117,7 @@ async function route() {
   if (!S.rooms.length) S.rooms = await api('GET', '/api/rooms');
   if (!S.lib) S.lib = await api('GET', '/api/library').catch(() => ({}));
   if (id === 'new') { S.view = 'new'; render(); return; }
+  if (id === 'import' && !SHARE) { await importFromBookmark(location.hash.slice('#/import/'.length)); return; }
   const target = S.rooms.find(r => r.id === id) ? id : S.rooms[0]?.id;
   if (!target) { S.view = 'new'; render(); return; }
   if (target !== S.id) {
@@ -585,14 +586,69 @@ function tilePanel() {
   return `<h3>Tile</h3>
     <div class="surflist">${surf.map(s => `<button class="surfbtn ${s.key === S.activeSurf ? 'on' : ''}" data-act="${esc(s.key)}"><span class="sl">${esc(s.label)}</span><span class="sm">${esc(s.inherit ? 'Same as the wall' : (mats[s.material] || lib[s.material] || {}).name || 'Not set')}</span><span class="sq">${line(s)}</span></button>`).join('')}</div>
     ${isRectTile(m) ? `<div class="sopts">${sel('orientation', m.orientation || 'horizontal', [['vertical', 'Vertical'], ['horizontal', 'Horizontal']])}${sel('pattern', m.pattern || 'stack', [['stack', 'Stacked'], ['offset', 'Offset ½'], ['third', 'Offset ⅓']])}</div>` : ''}
+    ${m.kind === 'tile' && m.price_per_sqft == null && !act.inherit && !/not chosen/i.test(m.status || '') ? `<label class="pricefix">Price per sq ft <span>$<input data-price="${esc(act.material)}" inputmode="decimal" placeholder="—"></span>${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">see the page ↗</a>` : ''}</label>` : ''}
     <h4>Put on ${esc(act.label.toLowerCase())}</h4>
-    <button class="addtile" id="addtile-btn">${icon('plus')}Add a tile</button>
+    ${SHARE ? '' : `<form id="linkform" class="linkform"><input name="url" type="url" placeholder="Paste a product link, press Enter" autocomplete="off" spellcheck="false"><button type="submit">Add</button></form>
+    ${S.linkMsg ? `<div class="linkmsg ${S.linkMsg.bad ? 'bad' : ''}">${S.linkMsg.html}</div>` : ''}
+    <div class="bmkrow"><a class="bmk" href="${esc(bookmarklet())}" title="Drag me to the bookmarks bar">${icon('plus')} Add to planner</a><span>drag to your bookmarks bar, then click it on any tile page (Home Depot, Lowe's, Wayfair too)</span></div>`}
+    <button class="addtile" id="addtile-btn">${icon('plus')}Add a tile by hand</button>
     <form id="addtile-form" class="libf compact" hidden>${tileFormFields()}<div class="row"><button class="primary" type="submit">Add and use it</button><span class="srcmsg" id="addtile-msg"></span></div></form>
     <div class="swatches">${act.niche ? `<button class="sw ${!S.raw.objects?.[+act.path.split('.')[1]]?.back_material ? 'on' : ''}" data-pick=""><span class="swi same"></span><span>Same as the wall</span></button>` : ''}${choices.map(([id, t]) => `<button class="sw ${id === act.material ? 'on' : ''}" data-pick="${esc(id)}" title="${esc(t.name)}"><img data-thumb="${esc(id)}" alt=""><span>${esc(t.name)}</span></button>`).join('')}</div>
     <p class="hint"><a href="#/${S.id}/materials">All materials, prices and the library →</a></p>`;
 }
+// ---------- add a tile from a product link (or from the bookmark button on any product page) ----------
+function bookmarklet() {
+  const target = `${location.origin}${location.pathname}#/import/`;
+  return "javascript:(()=>{const q=s=>document.querySelector(s);const d={u:location.href,ti:document.title,og:(q('meta[property=\"og:image\"]')||{}).content||'',lds:[...document.querySelectorAll('script[type=\"application/ld+json\"]')].map(s=>s.textContent).join('\\n').slice(0,30000),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,9000)};window.open('" + target + "'+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(d))))),'bathroom-planner')})()";
+}
+const rememberSurface = () => localStorage.setItem('bp-last', JSON.stringify({ room: S.id, surf: S.activeSurf }));
+async function finishImport(r, surfKey) {
+  const t = r.tile, lib = S.lib || {};
+  const same = Object.entries(lib).find(([, v]) => v.link && v.link === t.link);
+  let id = same ? same[0] : t.id, n = 2;
+  if (!same) while (lib[id]) id = `${t.id}-${n++}`;
+  const { id: _drop, ...rest } = t;
+  await api('POST', '/api/library', { id, ...rest });
+  S.lib = await api('GET', '/api/library');
+  const bits = [t.tile_w_in ? `${t.tile_w_in} × ${t.tile_h_in}″` : t.sheet_w_in ? `${t.sheet_w_in} × ${t.sheet_h_in}″ sheet` : '', t.price_per_sqft != null ? `$${t.price_per_sqft.toFixed(2)}/sq ft` : '', t.unit_sqft && t.unit !== 'piece' ? `${t.unit_sqft} sq ft per ${t.unit}` : ''].filter(Boolean);
+  const miss = r.missing?.length ? ` <span class="muted">Not on the page: ${esc(r.missing.join(', '))}${r.missing.includes('price') ? ' (type it in below)' : ''}.</span>` : '';
+  S.linkMsg = { html: `Added <b>${esc(t.name)}</b>${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}.${miss}${r.note ? ` <span class="muted">${esc(r.note)}</span>` : ''}` };
+  if (S.raw && surfKey) applyTile(surfKey, id); else render();
+}
+async function addFromLink(url) {
+  S.linkMsg = { html: 'Reading the page…' }; paint3DPanel();
+  try { await finishImport(await api('POST', '/api/tile-from-url', { url }), S.activeSurf); }
+  catch (e) { S.linkMsg = { html: esc(e.message.replace(/^\{"error": "|"\}$/g, '')), bad: true }; paint3DPanel(); }
+}
+async function importFromBookmark(raw) {
+  let payload;
+  try { payload = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(raw))))); } catch { payload = null; }
+  const last = JSON.parse(localStorage.getItem('bp-last') || '{}');
+  const room = S.rooms.find(r => r.id === last.room) ? last.room : S.rooms[0]?.id;
+  if (room !== S.id) { S.raw = await api('GET', '/api/rooms/' + encodeURIComponent(room)); S.id = room; S.undo = []; S.redo = []; S.sel = null; rebuild(); await ensureTex(); }
+  S.view = '3d'; S.sel = null; S.activeSurf = last.surf || S.activeSurf;
+  history.replaceState(null, '', `#/${S.id}/3d`);
+  if (!payload) { S.linkMsg = { html: "That page couldn't be read.", bad: true }; render(); return; }
+  S.linkMsg = { html: 'Reading the page…' }; render();
+  try { await finishImport(await api('POST', '/api/tile-from-page', payload), S.activeSurf); }
+  catch (e) { S.linkMsg = { html: esc(e.message), bad: true }; render(); }
+}
+
 function bindTilePanel() {
-  $$('[data-act]').forEach(b => b.onclick = () => { S.activeSurf = b.dataset.act; paint3DPanel(); });
+  $$('[data-act]').forEach(b => b.onclick = () => { S.activeSurf = b.dataset.act; rememberSurface(); paint3DPanel(); });
+  const lf = $('#linkform');
+  if (lf) lf.onsubmit = e => { e.preventDefault(); const u = lf.url.value.trim(); if (u) addFromLink(u); };
+  const bm = $('.bmk'); if (bm) bm.onclick = e => { e.preventDefault(); };
+  $$('[data-price]').forEach(inp => {
+    inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
+    inp.onchange = async () => {
+      const v = parseFloat(String(inp.value).replace(/[$,]/g, '')); if (!(v > 0)) return;
+      const mid = inp.dataset.price, next = clone(S.raw);
+      next.materials[mid].price_per_sqft = Math.round(v * 100) / 100;
+      if (S.lib?.[mid]) { await api('POST', '/api/library', { id: mid, ...S.lib[mid], price_per_sqft: next.materials[mid].price_per_sqft }); S.lib = await api('GET', '/api/library'); }
+      S.linkMsg = null; commit(next);
+    };
+  });
   $$('[data-pick]').forEach(b => b.onclick = () => applyTile(S.activeSurf, b.dataset.pick));
   $$('[data-mopt]').forEach(s => s.onchange = () => {
     const [mid, key] = s.dataset.mopt.split('|'), next = clone(S.raw);
@@ -958,3 +1014,4 @@ window.addEventListener('hashchange', () => route().catch(showFatal));
 function showFatal(e) { $('#main').innerHTML = `<div class="page"><div class="card fatal"><h2>Can't reach the planner's server</h2><p>${esc(e.message)}</p></div></div>`; }
 route().catch(showFatal);
 window.__bp = S; // handy in the console
+if (!SHARE) window.name = 'bathroom-planner'; // the bookmark button reuses this tab
