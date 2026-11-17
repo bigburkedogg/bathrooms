@@ -99,21 +99,38 @@ function drawKitKat(ctx, m, W, H, ppi, rand) {
     ctx.beginPath(); ctx.moveTo(xx + r, yy); ctx.lineTo(xx + ww - r, yy); ctx.quadraticCurveTo(xx + ww, yy, xx + ww, yy + r); ctx.lineTo(xx + ww, yy + hh - r); ctx.quadraticCurveTo(xx + ww, yy + hh, xx + ww - r, yy + hh); ctx.lineTo(xx + r, yy + hh); ctx.quadraticCurveTo(xx, yy + hh, xx, yy + hh - r); ctx.lineTo(xx, yy + r); ctx.quadraticCurveTo(xx, yy, xx + r, yy); ctx.fill();
   }
 }
-function drawHex(ctx, m, W, H, ppi, rand) {
-  const base = hexRgb(m.color), s = (m.hex_in || 2) * ppi / 2, g = (m.grout_in || 0.0625) * ppi;
-  ctx.fillStyle = m.grout_color || '#d9d5cd'; ctx.fillRect(0, 0, W, H);
-  const dx = Math.sqrt(3) * s, dy = 1.5 * s;
-  for (let row = -1; row * dy < H + s; row++) for (let col = -1; col * dx < W + dx; col++) {
-    const cx = col * dx + (row % 2 ? dx / 2 : 0), cy = row * dy, rr = s - g / 2;
-    ctx.fillStyle = css(base, 0.96 + rand() * 0.06); ctx.beginPath();
-    for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + (i * Math.PI) / 3; ctx[i ? 'lineTo' : 'moveTo'](cx + rr * Math.cos(a), cy + rr * Math.sin(a)); }
-    ctx.fill();
+// Hexagons at true size: hex_in is corner to corner. A whole number of columns and an even number of
+// rows make one seamless repeat; big single hexes and small mosaic hexes use the same honeycomb.
+// hex_flat: true turns them flat-side-up.
+function hexUnit(id, m) {
+  const D = m.hex_in || 2, R = D / 2, g = m.grout_in ?? (D >= 4 ? 0.125 : 0.0625);
+  const px = Math.sqrt(3) * R + g, py = 1.5 * R + g * Math.sqrt(3) / 2; // centre spacing, grout included
+  const cols = Math.max(2, Math.round(Math.max(12, 2 * px) / px)), rows = Math.max(2, 2 * Math.round(Math.max(12, 2 * py) / (2 * py)));
+  const W = cols * px, H = rows * py, ppi = Math.min(48, 2048 / Math.max(W, H));
+  const c = mkCanvas(W * ppi, H * ppi), ctx = c.getContext('2d'), rand = rng(id + 'hex'), base = hexRgb(m.color);
+  const sx = c.width / W, sy = c.height / H; // canvas is rounded to whole pixels; keep the repeat exact
+  ctx.fillStyle = m.grout_color || (D >= 4 ? '#d6d1c7' : '#d9d5cd'); ctx.fillRect(0, 0, c.width, c.height);
+  const r = R * Math.min(sx, sy);
+  for (let row = -1; row <= rows; row++) for (let col = -1; col <= cols; col++) {
+    const cx = (col + (row % 2 ? 0.5 : 0)) * px * sx, cy = row * py * sy;
+    ctx.fillStyle = css(base, 0.955 + rand() * 0.075);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + (i * Math.PI) / 3; ctx[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a)); }
+    ctx.closePath(); ctx.fill();
+    if (m.finish !== 'gloss') { ctx.save(); ctx.clip(); for (let k = 0; k < 40 * D; k++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? '255,255,255' : '0,0,0'},0.035)`; ctx.fillRect(cx - r + rand() * 2 * r, cy - r + rand() * 2 * r, 2, 2); } ctx.restore(); }
   }
+  let canvas = c, unitW = W, unitH = H;
+  if (m.hex_flat) { // rotate the whole repeat a quarter turn
+    const rc = mkCanvas(c.height, c.width), rx = rc.getContext('2d');
+    rx.translate(rc.width / 2, rc.height / 2); rx.rotate(Math.PI / 2); rx.drawImage(c, -c.width / 2, -c.height / 2);
+    canvas = rc; unitW = H; unitH = W;
+  }
+  return { canvas, bump: groutBump(canvas, m), unitW, unitH, rough: m.finish === 'gloss' ? 0.22 : 0.72 };
 }
 
 // ---------- the repeat unit ----------
 export function unitFor(id, m) {
-  const key = JSON.stringify([id, m.look, m.color, m.tile_w_in, m.tile_h_in, m.orientation, m.pattern, m.grout_in, m.grout_color, m.face_img, m.face_fit, m.sheet_img, m.sheet_w_in, m.sheet_h_in]);
+  const key = JSON.stringify([id, m.look, m.color, m.tile_w_in, m.tile_h_in, m.orientation, m.pattern, m.grout_in, m.grout_color, m.face_img, m.face_fit, m.sheet_img, m.sheet_w_in, m.sheet_h_in, m.hex_in, m.hex_flat, m.finish]);
   if (units.has(key)) return units.get(key);
   const look = m.look || 'plain';
   let u;
@@ -126,10 +143,12 @@ export function unitFor(id, m) {
     const bimg = m.bump_img && imgs.get(m.bump_img)?.__v;
     if (bimg) { bump = mkCanvas(512, 512 * sh / sw); bump.getContext('2d').drawImage(bimg, 0, 0, bump.width, bump.height); }
     u = { canvas: c, bump, unitW: sw, unitH: sh, rough: 0.82 };
-  } else if (look === 'kitkat' || look === 'hex') {
+  } else if (look === 'hex') {
+    u = hexUnit(id, m);
+  } else if (look === 'kitkat') {
     const sw = m.sheet_w_in || 12, sh = m.sheet_h_in || 12, ppi = Math.min(48, 1536 / Math.max(sw, sh));
     const c = mkCanvas(sw * ppi, sh * ppi), rand = rng(id);
-    (look === 'kitkat' ? drawKitKat : drawHex)(c.getContext('2d'), m, c.width, c.height, ppi, rand);
+    drawKitKat(c.getContext('2d'), m, c.width, c.height, ppi, rand);
     u = { canvas: c, bump: groutBump(c, m), unitW: sw, unitH: sh, rough: m.finish === 'gloss' ? 0.22 : 0.7 };
   } else {
     const [tw, th] = laidSize(m), g = m.grout_in ?? 0.125;

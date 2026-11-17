@@ -82,6 +82,23 @@ async function shareApi(method, url, body) {
   throw new Error('Not available in the shared copy.');
 }
 const hasLocalEdits = () => SHARE && S.id && localStorage.getItem(LS + 'room:' + S.id) != null;
+// The library is the record for what a tile is (size, look, colour, price, photo). A room keeps its own
+// copy so it still works if a tile leaves the library, but takes the library's facts on load. What
+// belongs to the room stays: how it's laid, and this project's vendor sheet, status and budget line.
+const ROOM_KEYS = ['orientation', 'pattern', 'selection', 'where', 'status', 'allowance'];
+function syncFromLibrary(raw) {
+  if (!S.lib || !raw?.materials) return false;
+  let changed = false;
+  for (const [id, m] of Object.entries(raw.materials)) {
+    const L = S.lib[id];
+    if (!L || m.kind !== 'tile') continue;
+    const merged = { ...m, ...L };
+    for (const k of ROOM_KEYS) { if (m[k] !== undefined) merged[k] = m[k]; }
+    for (const k of Object.keys(m)) if (!(k in L)) merged[k] = m[k];
+    if (JSON.stringify(merged) !== JSON.stringify(m)) { raw.materials[id] = merged; changed = true; }
+  }
+  return changed;
+}
 function rebuild() {
   S.errs = validate(S.raw);
   try { S.M = S.errs.length ? null : build(S.raw); } catch (e) { S.M = null; S.errs.push('Build failed: ' + e.message); }
@@ -122,7 +139,9 @@ async function route() {
   if (!target) { S.view = 'new'; render(); return; }
   if (target !== S.id) {
     S.raw = await api('GET', '/api/rooms/' + encodeURIComponent(target));
-    S.id = target; S.undo = []; S.redo = []; S.goalIdx = 0; S.sel = null; S.cam3d = null; rebuild();
+    S.id = target; S.undo = []; S.redo = []; S.goalIdx = 0; S.sel = null; S.cam3d = null;
+    if (syncFromLibrary(S.raw)) scheduleSave();
+    rebuild();
   }
   await ensureTex();
   S.view = VIEWS.some(v => v[0] === view) ? view : 'overview';
@@ -586,6 +605,7 @@ function tilePanel() {
   return `<h3>Tile</h3>
     <div class="surflist">${surf.map(s => `<button class="surfbtn ${s.key === S.activeSurf ? 'on' : ''}" data-act="${esc(s.key)}"><span class="sl">${esc(s.label)}</span><span class="sm">${esc(s.inherit ? 'Same as the wall' : (mats[s.material] || lib[s.material] || {}).name || 'Not set')}</span><span class="sq">${line(s)}</span></button>`).join('')}</div>
     ${isRectTile(m) ? `<div class="sopts">${sel('orientation', m.orientation || 'horizontal', [['vertical', 'Vertical'], ['horizontal', 'Horizontal']])}${sel('pattern', m.pattern || 'stack', [['stack', 'Stacked'], ['offset', 'Offset ½'], ['third', 'Offset ⅓']])}</div>` : ''}
+    ${m.kind === 'tile' && !act.inherit && !['photo', 'sheet'].includes(m.look) ? `<label class="colorfix"><input type="color" data-mcolor="${esc(act.material)}" value="${esc(/^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : '#e6e2da')}"> Colour${m.photo ? ` <img src="${esc(m.photo)}" alt="" title="Product photo">` : ''}${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">product page ↗</a>` : ''}</label>` : ''}
     ${m.kind === 'tile' && m.price_per_sqft == null && !act.inherit && !/not chosen/i.test(m.status || '') ? `<label class="pricefix">Price per sq ft <span>$<input data-price="${esc(act.material)}" inputmode="decimal" placeholder="—"></span>${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">see the page ↗</a>` : ''}</label>` : ''}
     <h4>Put on ${esc(act.label.toLowerCase())}</h4>
     ${SHARE ? '' : `<form id="linkform" class="linkform"><input name="url" type="url" placeholder="Paste a product link, press Enter" autocomplete="off" spellcheck="false"><button type="submit">Add</button></form>
@@ -639,6 +659,12 @@ function bindTilePanel() {
   const lf = $('#linkform');
   if (lf) lf.onsubmit = e => { e.preventDefault(); const u = lf.url.value.trim(); if (u) addFromLink(u); };
   const bm = $('.bmk'); if (bm) bm.onclick = e => { e.preventDefault(); };
+  $$('[data-mcolor]').forEach(inp => inp.onchange = async () => {
+    const mid = inp.dataset.mcolor, next = clone(S.raw);
+    next.materials[mid].color = inp.value;
+    if (S.lib?.[mid]) { await api('POST', '/api/library', { id: mid, ...S.lib[mid], color: inp.value }); S.lib = await api('GET', '/api/library'); }
+    commit(next);
+  });
   $$('[data-price]').forEach(inp => {
     inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
     inp.onchange = async () => {

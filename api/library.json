@@ -203,5 +203,40 @@
   "unit": "sheet",
   "unit_sqft": 1,
   "waste_pct": 10
+ },
+ "bedrosians-makoto-hexagon-10-in-x-11-5-in-matte-arashi-blue-": {
+  "kind": "tile",
+  "name": "Bedrosians Makoto Hexagon 10 × 11.5 Matte Arashi Blue Porcelain Floor and Wall Tile",
+  "sku": "DECMAKARBHEX10M",
+  "link": "https://www.homedepot.com/p/Bedrosians-Makoto-Hexagon-10-in-x-11-5-in-Matte-Arashi-Blue-Porcelain-Floor-and-Wall-Tile-10-76-sq-ft-Case-DECMAKARBHEX10M/326360817",
+  "grout_in": 0.125,
+  "waste_pct": 10,
+  "color": "#5C6F6E",
+  "look": "hex",
+  "photo": "textures/user/bedrosians-makoto-hexagon-10-11-5-matte--1794933655.jpg",
+  "finish": "matte",
+  "hex_in": 11.5,
+  "hex_flat": false,
+  "unit": "box",
+  "unit_sqft": 10.76,
+  "price_per_sqft": 8.39
+ },
+ "marazzi-moroccan-concrete-charcoal-10-11-glazed-ceramic-hexa": {
+  "kind": "tile",
+  "name": "Marazzi Moroccan Concrete Charcoal 10 × 11 Glazed Ceramic Hexagon Mosaic Tile",
+  "sku": "MC5715HEXMS1P2",
+  "link": "https://www.homedepot.com/p/Marazzi-Moroccan-Concrete-Charcoal-10-in-x-11-in-Glazed-Ceramic-Hexagon-Mosaic-Tile-9-72-sq-ft-Case-MC5715HEXMS1P2/320536775?MERCH=REC-_-rv_search_plp_rr-_-n/a-_-5-_-n/a-_-n/a-_-n/a-_-n/a-_-n/a",
+  "grout_in": 0.0625,
+  "waste_pct": 10,
+  "color": "#4C4841",
+  "look": "hex",
+  "photo": "textures/user/marazzi-moroccan-concrete-charcoal-10-11-1794933655.jpg",
+  "finish": "matte",
+  "hex_in": 1.5,
+  "sheet_w_in": 10.0,
+  "sheet_h_in": 11.0,
+  "unit": "box",
+  "unit_sqft": 9.72,
+  "price_per_sqft": 7.31
  }
 }
