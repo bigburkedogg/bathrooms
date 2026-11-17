@@ -104,16 +104,6 @@
    "with": "vanity"
   },
   {
-   "id": "door",
-   "type": "door",
-   "wall": "C",
-   "x_in": 42,
-   "w_in": 30,
-   "h_in": 80,
-   "hinge": "right",
-   "conf": "estimated"
-  },
-  {
    "id": "vanity",
    "type": "vanity",
    "wall": "B",
@@ -133,7 +123,7 @@
    "y_in": 42,
    "h_in": 16,
    "depth_in": 3.5,
-   "back_material": "marazzi-moroccan-concrete-charcoal-10-11-glazed-ceramic-hexa"
+   "back_material": "bedrosians-makoto-hexagon-10-in-x-11-5-in-matte-arashi-blue-"
   },
   {
    "id": "niche-copy",
@@ -149,7 +139,7 @@
   }
  ],
  "floor": {
-  "material": "marazzi-moroccan-concrete-charcoal-10-11-glazed-ceramic-hexa"
+  "material": "bedrosians-makoto-hexagon-10-in-x-11-5-in-matte-arashi-blue-"
  },
  "paint": {
   "material": "natural-cream",

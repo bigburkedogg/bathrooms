@@ -113,12 +113,13 @@ function dimLine(a, b, off, normal, fs, label, cls = 'dim') {
   const u = mul(d, 1 / len), tick = mul(add(u, normal), 1.2);
   const deg = (Math.atan2(u[1], u[0]) * 180) / Math.PI;
   const mid = add(mul(add(A, B), 0.5), mul(normal, fs * 0.75));
-  const ext = (p, q) => `<line x1="${r(p[0])}" y1="${r(p[1])}" x2="${r(q[0])}" y2="${r(q[1])}" class="${cls}-ext"/>`;
+  const base = cls.split(' ')[0]; // 'dim c-est' → parts are dim-l, dim-t…; the extra classes stay on the group
+  const ext = (p, q) => `<line x1="${r(p[0])}" y1="${r(p[1])}" x2="${r(q[0])}" y2="${r(q[1])}" class="${base}-ext"/>`;
   return `<g class="${cls}">${ext(add(a, mul(normal, 1)), add(A, mul(normal, 1.2)))}${ext(add(b, mul(normal, 1)), add(B, mul(normal, 1.2)))}` +
-    `<line x1="${r(A[0])}" y1="${r(A[1])}" x2="${r(B[0])}" y2="${r(B[1])}" class="${cls}-l"/>` +
-    `<line x1="${r(A[0] - tick[0])}" y1="${r(A[1] - tick[1])}" x2="${r(A[0] + tick[0])}" y2="${r(A[1] + tick[1])}" class="${cls}-tk"/>` +
-    `<line x1="${r(B[0] - tick[0])}" y1="${r(B[1] - tick[1])}" x2="${r(B[0] + tick[0])}" y2="${r(B[1] + tick[1])}" class="${cls}-tk"/>` +
-    textAlong(mid[0], mid[1], deg, label, fs, cls + '-t') + '</g>';
+    `<line x1="${r(A[0])}" y1="${r(A[1])}" x2="${r(B[0])}" y2="${r(B[1])}" class="${base}-l"/>` +
+    `<line x1="${r(A[0] - tick[0])}" y1="${r(A[1] - tick[1])}" x2="${r(A[0] + tick[0])}" y2="${r(A[1] + tick[1])}" class="${base}-tk"/>` +
+    `<line x1="${r(B[0] - tick[0])}" y1="${r(B[1] - tick[1])}" x2="${r(B[0] + tick[0])}" y2="${r(B[1] + tick[1])}" class="${base}-tk"/>` +
+    textAlong(mid[0], mid[1], deg, label, fs, base + '-t') + '</g>';
 }
 function intersect(p1, d1, p2, d2) {
   const det = d1[0] * d2[1] - d1[1] * d2[0];
@@ -391,6 +392,19 @@ export function wallGroup(M, W, o, ox, Hmax, P, fs) {
     for (const ct of W.contacts) { marks.add(ct.x0); marks.add(ct.x1); }
     const xs = [...marks].map(v => r(v)).sort((a, c) => a - c).filter((v, i, a) => i === 0 || v - a[i - 1] > 0.2);
     if (xs.length > 2) for (let i = 0; i < xs.length - 1; i++) s += dimLine([X(xs[i]), Y(0)], [X(xs[i + 1]), Y(0)], fs * 0.85, [0, 1], fs * 0.55, fmtIn(xs[i + 1] - xs[i]), 'dim2');
+    // toilet centerline, and its distance to the nearest wall or fixture on each side
+    for (const ct of W.contacts) {
+      const t = ct.obj;
+      if (t.type !== 'toilet' || ct.edge !== 0 || !t.clear) continue;
+      const { cx, left, right } = t.clear, top = t.h + 6 + fs * 1.1;
+      s += `<g class="cl-mark"><line x1="${r(X(cx))}" y1="${r(Y(-2))}" x2="${r(X(cx))}" y2="${r(Y(top))}" class="cl-line"/>` +
+        `<text x="${r(X(cx))}" y="${r(Y(top) - fs * 0.6)}" font-size="${r(fs * 0.95)}" text-anchor="middle" class="cl-sym">℄</text></g>`;
+      for (const sd of [left, right]) {
+        if (!sd || sd.d < 0.1) continue;
+        const u0 = sd === left ? sd.u : cx, u1 = sd === left ? cx : sd.u;
+        s += dimLine([X(u0), Y(t.h)], [X(u1), Y(t.h)], 6, [0, -1], fs * 0.62, fmtIn(sd.d), 'dim cl-dim ' + confCls(sd.conf));
+      }
+    }
   }
   return s + '</g>';
 }

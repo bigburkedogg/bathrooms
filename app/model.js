@@ -201,6 +201,39 @@ export function build(room) {
     const a = fixtures[i], b = fixtures[j];
     if (footOverlap(a.foot, b.foot) > 4) issues.push({ level: 'warn', code: 'FIXTURE_OVERLAP', text: `${a.label} and ${b.label} overlap in plan.` });
   }
+  // Toilet centerline: from the center of each toilet to the nearest wall or fixture on each side,
+  // measured along the wall it backs onto, anywhere beside it (from that wall out to its front).
+  const weakest = (...cs) => CONF_ORDER[Math.max(...cs.map(c => Math.max(0, CONF_ORDER.indexOf(c || 'assumed'))))];
+  for (const t of fixtures.filter(o => o.type === 'toilet')) {
+    const W = t.W, cx = t.x + t.w / 2, v0 = EPS, v1 = Math.max(t.depth, 1) - EPS;
+    const uv = p => [dot(sub(p, W.start), W.dir), dot(sub(p, W.start), W.normal)];
+    let left = null, right = null;
+    const take = (u0, u1, what, conf) => {
+      if (u1 <= cx + EPS) { if (!left || u1 > left.u) left = { u: u1, what, conf }; }
+      else if (u0 >= cx - EPS) { if (!right || u0 < right.u) right = { u: u0, what, conf }; }
+    };
+    for (const V of walls) {
+      if (V === W) continue;
+      const a = uv(V.start), b = uv(V.end);
+      let s0 = 0, s1 = 1;
+      if (Math.abs(b[1] - a[1]) < 1e-9) { if (a[1] <= v0 || a[1] >= v1) continue; }
+      else {
+        const ta = (v0 - a[1]) / (b[1] - a[1]), tb = (v1 - a[1]) / (b[1] - a[1]);
+        s0 = Math.max(0, Math.min(ta, tb)); s1 = Math.min(1, Math.max(ta, tb));
+        if (s1 <= s0) continue;
+      }
+      const ua = a[0] + (b[0] - a[0]) * s0, ub = a[0] + (b[0] - a[0]) * s1;
+      take(Math.min(ua, ub), Math.max(ua, ub), `wall ${V.id}`, weakest(t.conf, W.conf, V.conf));
+    }
+    for (const f of fixtures) {
+      if (f === t) continue;
+      const p = f.foot.map(uv), us = p.map(q => q[0]), vs = p.map(q => q[1]);
+      if (Math.max(...vs) <= v0 || Math.min(...vs) >= v1) continue;
+      take(Math.min(...us), Math.max(...us), `the ${f.label.toLowerCase()}`, weakest(t.conf, f.conf));
+    }
+    t.clear = { cx, left: left && { ...left, d: cx - left.u }, right: right && { ...right, d: right.u - cx } };
+  }
+
   // doors blocked by fixtures on the same wall
   for (const W of walls) for (const o of W.objects.filter(q => q.type === 'door')) {
     for (const f of W.objects.filter(q => q.foot)) {

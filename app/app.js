@@ -336,7 +336,7 @@ function inspector(where, W) {
   f += sel('Status', 'conf', o.conf || 'assumed', CONF_ORDER.map(c => [c, CONF_LABEL[c]]));
   const kids = (S.raw.objects || []).filter(q => q.with === o.id).map(q => q.label || TYPES[q.type]?.label || q.type);
   return `<aside class="insp sel"><div class="insp-h"><h3>${esc(o.label || T.label || o.type)}</h3><button class="x" data-ins-act="done" title="Deselect (Esc)">×</button></div>
-    <div class="readout" id="readout">${ob.W ? `Wall ${esc(ob.W.id)} · ${fmtIn(ob.x)} from the left corner` : ''}</div>
+    <div class="readout" id="readout">${ob.W ? `Wall ${esc(ob.W.id)} · ${fmtIn(ob.x)} from the left corner` : ''}${ob.clear ? ` · center ${[ob.clear.left, ob.clear.right].filter(Boolean).map(sd => `${fmtIn(sd.d)} to ${esc(sd.what)}`).join(', ')}` : ''}</div>
     ${f}${kids.length ? `<p class="hint">Moves with it: ${esc(kids.join(', '))}</p>` : ''}
     <div class="insp-btns"><button data-ins-act="dup">Duplicate</button><button data-ins-act="del" class="danger">Delete</button></div>
     <p class="hint">Arrow keys nudge ½″ (Shift: 6″) · Delete removes · Esc deselects</p></aside>`;
@@ -507,7 +507,8 @@ function bindWalls() {
     const draft = clone(S.raw); moveObject(draft, drag.id, W.id, x, y); drag.draft = draft;
     const M2 = build(draft);
     sheet.innerHTML = elevationSVG(M2, M2.wallById[W.id], dopts({ sel: drag.id }));
-    readout(`${fmtIn(x)} from the left corner${y != null ? ` · ${fmtIn(y)} up from the floor` : ''}`);
+    const tc = M2.byId[drag.id]?.clear; // a toilet: its center to each side
+    readout(`${fmtIn(x)} from the left corner${y != null ? ` · ${fmtIn(y)} up from the floor` : ''}${tc ? ` · center ${[tc.left, tc.right].filter(Boolean).map(sd => `${fmtIn(sd.d)} to ${sd.what}`).join(', ')}` : ''}`);
   });
   const end = () => { if (!drag) return; const d = drag; drag = null; if (d.moved && d.draft) commit(d.draft); else render(); };
   sheet.addEventListener('pointerup', end); sheet.addEventListener('pointercancel', end);
