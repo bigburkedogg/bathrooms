@@ -605,12 +605,13 @@ function tilePanel() {
   return `<h3>Tile</h3>
     <div class="surflist">${surf.map(s => `<button class="surfbtn ${s.key === S.activeSurf ? 'on' : ''}" data-act="${esc(s.key)}"><span class="sl">${esc(s.label)}</span><span class="sm">${esc(s.inherit ? 'Same as the wall' : (mats[s.material] || lib[s.material] || {}).name || 'Not set')}</span><span class="sq">${line(s)}</span></button>`).join('')}</div>
     ${isRectTile(m) ? `<div class="sopts">${sel('orientation', m.orientation || 'horizontal', [['vertical', 'Vertical'], ['horizontal', 'Horizontal']])}${sel('pattern', m.pattern || 'stack', [['stack', 'Stacked'], ['offset', 'Offset ½'], ['third', 'Offset ⅓']])}</div>` : ''}
-    ${m.kind === 'tile' && !act.inherit && !['photo', 'sheet'].includes(m.look) ? `<label class="colorfix"><input type="color" data-mcolor="${esc(act.material)}" value="${esc(/^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : '#e6e2da')}"> Colour${m.photo ? ` <img src="${esc(m.photo)}" alt="" title="Product photo">` : ''}${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">product page ↗</a>` : ''}</label>` : ''}
+    ${m.kind === 'tile' && !act.inherit && !['photo', 'sheet'].includes(m.look) ? `<label class="colorfix"><input type="color" data-mcolor="${esc(act.material)}" value="${esc(/^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : '#e6e2da')}"> Colour${m.photo ? ` <img src="${esc(m.photo)}" alt="" title="Product photo"><button class="phbtn ${m.face_from_photo === false ? '' : 'on'}" data-photosurf="${esc(act.material)}" title="Paint each tile with real patches of this photo">${m.face_from_photo === false ? 'Use the photo' : 'From the photo'}</button>` : ''}${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">product page ↗</a>` : ''}</label>` : ''}
     ${m.kind === 'tile' && m.price_per_sqft == null && !act.inherit && !/not chosen/i.test(m.status || '') ? `<label class="pricefix">Price per sq ft <span>$<input data-price="${esc(act.material)}" inputmode="decimal" placeholder="—"></span>${m.link ? ` <a href="${esc(m.link)}" target="_blank" rel="noopener">see the page ↗</a>` : ''}</label>` : ''}
     <h4>Put on ${esc(act.label.toLowerCase())}</h4>
     ${SHARE ? '' : `<form id="linkform" class="linkform"><input name="url" type="url" placeholder="Paste a product link, press Enter" autocomplete="off" spellcheck="false"><button type="submit">Add</button></form>
     ${S.linkMsg ? `<div class="linkmsg ${S.linkMsg.bad ? 'bad' : ''}">${S.linkMsg.html}</div>` : ''}
-    <div class="bmkrow"><a class="bmk" href="${esc(bookmarklet())}" title="Drag me to the bookmarks bar">${icon('plus')} Add to planner</a><span>drag to your bookmarks bar, then click it on any tile page (Home Depot, Lowe's, Wayfair too)</span></div>`}
+    ${S.readerHelpHtml && !readerReady() ? S.readerHelpHtml : ''}
+    <div class="bmkrow">${readerReady() ? '<span class="rdr on">Chrome reader on</span>' : '<a href="#" class="rdr" data-readerhelp>Set up the Chrome reader</a>'}<a class="bmk" href="${esc(bookmarklet())}" title="Drag me to the bookmarks bar; click it on any tile page">${icon('plus')} Add to planner</a></div>`}
     <button class="addtile" id="addtile-btn">${icon('plus')}Add a tile by hand</button>
     <form id="addtile-form" class="libf compact" hidden>${tileFormFields()}<div class="row"><button class="primary" type="submit">Add and use it</button><span class="srcmsg" id="addtile-msg"></span></div></form>
     <div class="swatches">${act.niche ? `<button class="sw ${!S.raw.objects?.[+act.path.split('.')[1]]?.back_material ? 'on' : ''}" data-pick=""><span class="swi same"></span><span>Same as the wall</span></button>` : ''}${choices.map(([id, t]) => `<button class="sw ${id === act.material ? 'on' : ''}" data-pick="${esc(id)}" title="${esc(t.name)}"><img data-thumb="${esc(id)}" alt=""><span>${esc(t.name)}</span></button>`).join('')}</div>
@@ -631,14 +632,51 @@ async function finishImport(r, surfKey) {
   await api('POST', '/api/library', { id, ...rest });
   S.lib = await api('GET', '/api/library');
   const bits = [t.tile_w_in ? `${t.tile_w_in} × ${t.tile_h_in}″` : t.sheet_w_in ? `${t.sheet_w_in} × ${t.sheet_h_in}″ sheet` : '', t.price_per_sqft != null ? `$${t.price_per_sqft.toFixed(2)}/sq ft` : '', t.unit_sqft && t.unit !== 'piece' ? `${t.unit_sqft} sq ft per ${t.unit}` : ''].filter(Boolean);
-  const miss = r.missing?.length ? ` <span class="muted">Not on the page: ${esc(r.missing.join(', '))}${r.missing.includes('price') ? ' (type it in below)' : ''}.</span>` : '';
+  const miss = (r.missing?.length ? ` <span class="muted">Not on the page: ${esc(r.missing.join(', '))}${r.missing.includes('price') ? ' (type it in below)' : ''}.</span>` : '') +
+    (r.readerHint ? ` <a href="#" data-readerhelp>Get the price and photo from ${esc(new URL(t.link || 'https://x').hostname.replace('www.', ''))} too →</a>` : '');
   S.linkMsg = { html: `Added <b>${esc(t.name)}</b>${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}.${miss}${r.note ? ` <span class="muted">${esc(r.note)}</span>` : ''}` };
   if (S.raw && surfKey) applyTile(surfKey, id); else render();
 }
+// Sites that refuse programs; the Chrome reader extension (chrome-reader/) reads them in Brian's own Chrome.
+const BLOCKING = /(^|\.)(homedepot\.com|lowes\.com|wayfair\.com|allmodern\.com|perigold\.com|birchlane\.com|jossandmain\.com|walmart\.com|build\.com|ferguson\.com|tileclub\.com)$/i;
+const readerReady = () => document.documentElement.dataset.bpReader === '1';
+function readInChrome(url) {
+  return new Promise((resolve, reject) => {
+    const on = e => {
+      if (e.source !== window || !e.data || e.data.bpReadResult !== url) return;
+      clearTimeout(timer); window.removeEventListener('message', on);
+      const r = e.data.resp; r && r.ok ? resolve(r.data) : reject(new Error((r && r.error) || "Chrome couldn't read the page."));
+    };
+    const timer = setTimeout(() => { window.removeEventListener('message', on); reject(new Error('Chrome took too long to load the page.')); }, 50000);
+    window.addEventListener('message', on);
+    window.postMessage({ bpRead: url }, location.origin);
+  });
+}
 async function addFromLink(url) {
   S.linkMsg = { html: 'Reading the page…' }; paint3DPanel();
-  try { await finishImport(await api('POST', '/api/tile-from-url', { url }), S.activeSurf); }
-  catch (e) { S.linkMsg = { html: esc(e.message.replace(/^\{"error": "|"\}$/g, '')), bad: true }; paint3DPanel(); }
+  let host = ''; try { host = new URL(url).hostname; } catch { /* not a link */ }
+  try {
+    if (BLOCKING.test(host) && readerReady()) {
+      S.linkMsg = { html: 'Reading the page in your Chrome…' }; paint3DPanel();
+      return await finishImport(await api('POST', '/api/tile-from-page', await readInChrome(url)), S.activeSurf);
+    }
+    const r = await api('POST', '/api/tile-from-url', { url });
+    if (r.note && readerReady()) { // the site refused the server: let Chrome read it
+      S.linkMsg = { html: 'Reading the page in your Chrome…' }; paint3DPanel();
+      try { return await finishImport(await api('POST', '/api/tile-from-page', await readInChrome(url)), S.activeSurf); } catch { /* keep what the link gave */ }
+    }
+    if (r.note && !readerReady()) r.readerHint = true;
+    await finishImport(r, S.activeSurf);
+  } catch (e) { S.linkMsg = { html: esc(e.message.replace(/^\{"error": "|"\}$/g, '')), bad: true }; paint3DPanel(); }
+}
+async function readerHelp() {
+  const info = await api('GET', '/api/info').catch(() => ({}));
+  return `<div class="readerhelp"><b>Chrome reader — set up once</b>
+    <ol><li>In Chrome, type <code>chrome://extensions</code> in the address bar.</li>
+    <li>Turn on <b>Developer mode</b> (top right).</li>
+    <li>Click <b>Load unpacked</b>, press <b>⌘⇧G</b>, paste the folder path, press Enter, then <b>Select</b>.</li></ol>
+    <div class="row"><code class="path">${esc(info.readerPath || 'bathroom-planner/chrome-reader')}</code><button data-copypath="${esc(info.readerPath || '')}">Copy path</button></div>
+    <div class="muted">Then reload this page. Home Depot, Lowe's and Wayfair links come in with price and photo.</div></div>`;
 }
 async function importFromBookmark(raw) {
   let payload;
@@ -659,10 +697,19 @@ function bindTilePanel() {
   const lf = $('#linkform');
   if (lf) lf.onsubmit = e => { e.preventDefault(); const u = lf.url.value.trim(); if (u) addFromLink(u); };
   const bm = $('.bmk'); if (bm) bm.onclick = e => { e.preventDefault(); };
+  $$('[data-readerhelp]').forEach(a => a.onclick = async e => { e.preventDefault(); S.readerHelpHtml = S.readerHelpHtml ? null : await readerHelp(); paint3DPanel(); });
+  $$('[data-copypath]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copypath); b.textContent = 'Copied'; } catch { b.textContent = 'Select it above'; } });
   $$('[data-mcolor]').forEach(inp => inp.onchange = async () => {
     const mid = inp.dataset.mcolor, next = clone(S.raw);
-    next.materials[mid].color = inp.value;
-    if (S.lib?.[mid]) { await api('POST', '/api/library', { id: mid, ...S.lib[mid], color: inp.value }); S.lib = await api('GET', '/api/library'); }
+    next.materials[mid].color = inp.value; next.materials[mid].face_from_photo = false; // a picked colour beats the photo
+    if (S.lib?.[mid]) { await api('POST', '/api/library', { id: mid, ...S.lib[mid], color: inp.value, face_from_photo: false }); S.lib = await api('GET', '/api/library'); }
+    commit(next);
+  });
+  $$('[data-photosurf]').forEach(b => b.onclick = async e => {
+    e.preventDefault();
+    const mid = b.dataset.photosurf, next = clone(S.raw), on = next.materials[mid].face_from_photo === false;
+    next.materials[mid].face_from_photo = on;
+    if (S.lib?.[mid]) { await api('POST', '/api/library', { id: mid, ...S.lib[mid], face_from_photo: on }); S.lib = await api('GET', '/api/library'); }
     commit(next);
   });
   $$('[data-price]').forEach(inp => {
